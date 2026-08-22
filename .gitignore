@@ -1,0 +1,46 @@
+# Compiled files
+*.o
+*.so
+*.dylib
+*.exe
+*.dll
+target/
+backend/target/
+backend/release/
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+frontend/.svelte-kit/
+frontend/.pnpm-store/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+ml-service/venv/
+ml-service/__pycache__/
+
+# Logs & data
+*.log
+*.tmp
+*.swp
+.cfp_pids
+*.pid
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large files
+*.tar.gz
+*.zip
+*.db
+*.sqlite
+*.dump
+backup/

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CFP Backend Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .endpoint { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+        button { margin: 5px; padding: 8px 16px; }
+    </style>
+</head>
+<body>
+    <h1>CFP Backend Connection Test</h1>
+    
+    <div id="results">
+        <div class="endpoint" id="root">Testing / ...</div>
+        <div class="endpoint" id="health">Testing /health ...</div>
+        <div class="endpoint" id="apiHealth">Testing /api/health ...</div>
+        <div class="endpoint" id="apiStatus">Testing /api/status ...</div>
+        <div class="endpoint" id="apiMembers">Testing /api/members ...</div>
+    </div>
+    
+    <button onclick="testAll()">Test All Endpoints</button>
+    
+    <script>
+        async function testEndpoint(url, elementId) {
+            const element = document.getElementById(elementId);
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                element.innerHTML = `<strong>${url}</strong>: ✅ SUCCESS (${response.status})<br>
+                                     <small>${JSON.stringify(data).substring(0, 100)}...</small>`;
+                element.className = 'endpoint success';
+                return true;
+            } catch (error) {
+                element.innerHTML = `<strong>${url}</strong>: ❌ ERROR - ${error.message}`;
+                element.className = 'endpoint error';
+                return false;
+            }
+        }
+        
+        async function testAll() {
+            const tests = [
+                { url: 'http://localhost:3000/', id: 'root' },
+                { url: 'http://localhost:3000/health', id: 'health' },
+                { url: 'http://localhost:3000/api/health', id: 'apiHealth' },
+                { url: 'http://localhost:3000/api/status', id: 'apiStatus' },
+                { url: 'http://localhost:3000/api/members', id: 'apiMembers' }
+            ];
+            
+            for (const test of tests) {
+                await testEndpoint(test.url, test.id);
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Test on load
+        testAll();
+    </script>
+</body>
+</html>

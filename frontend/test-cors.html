@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Test</title>
+</head>
+<body>
+    <h1>CORS Test for CFP Backend</h1>
+    
+    <div id="result">Testing...</div>
+    
+    <script>
+        async function testCORS() {
+            const result = document.getElementById('result');
+            
+            try {
+                // Test fetch with credentials
+                const response = await fetch('http://localhost:3000/health', {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `
+                        <div style="background: green; color: white; padding: 20px; border-radius: 5px;">
+                            <h3>✅ CORS IS WORKING!</h3>
+                            <p>Status: ${response.status} ${response.statusText}</p>
+                            <p>Response: ${JSON.stringify(data)}</p>
+                            <p>Headers: ${JSON.stringify([...response.headers.entries()])}</p>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div style="background: orange; color: white; padding: 20px; border-radius: 5px;">
+                            <h3>⚠️ Got response but not OK</h3>
+                            <p>Status: ${response.status} ${response.statusText}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div style="background: red; color: white; padding: 20px; border-radius: 5px;">
+                        <h3>❌ CORS ERROR</h3>
+                        <p>Error: ${error.message}</p>
+                        <p>Full error: ${error}</p>
+                    </div>
+                `;
+                console.error('CORS Error:', error);
+            }
+        }
+        
+        // Run test
+        testCORS();
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass cfp_redis_123
+    ports:
+      - "6380:6379"  # Changed from 6379 to 6380
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
