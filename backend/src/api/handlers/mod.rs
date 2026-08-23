@@ -1,9 +1,9 @@
 pub mod auth_handler;
 pub mod author_handler;
 pub mod db_test_handler;
-pub mod downloads_handler;
-pub mod download_stats;
-pub mod downloads_test;
+//pub mod downloads_handler;
+//pub mod download_stats;
+//pub mod downloads_test;
 pub mod member_handler;
 pub mod text_handler;
 
@@ -11,9 +11,9 @@ pub mod text_handler;
 pub use auth_handler::*;
 pub use author_handler::*;
 pub use db_test_handler::*;
-pub use downloads_handler::*;
-pub use download_stats::*;
-pub use downloads_test::*;
+//pub use downloads_handler::*;
+//pub use download_stats::*;
+//pub use downloads_test::*;
 pub use member_handler::*;
 pub use text_handler::*;
 
