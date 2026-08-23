@@ -23,6 +23,6 @@ pub fn api_routes(cfg: &mut web::ServiceConfig) {
                 .configure(member_routes::member_routes)
                 .configure(author_routes::author_routes)
                 .configure(text_routes::text_routes)
-                .configure(download_routes::download_routes)
+               // .configure(download_routes::download_routes)
         );
 }

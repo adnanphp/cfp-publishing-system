@@ -1,6 +1,6 @@
 use actix_web::{HttpResponse, Responder, web};
 use serde_json::json;
-use crate::infrastructure::database::repositories::AuthorRepository;
+use crate::infrastructure::database::repositories::author_repository;
 
 pub async fn get_authors(repo: web::Data<AuthorRepository>) -> impl Responder {
     match repo.get_all().await {

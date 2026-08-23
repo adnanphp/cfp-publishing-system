@@ -20,8 +20,8 @@ pub mod repositories {
     pub mod donation_repository;  // Add this line
     
     pub use member_repository::MemberRepository;
-    pub use author_repository::AuthorRepository;
-    pub use text_repository::TextRepository;
+    //pub use author_repository::AuthorRepository;
+    //pub use text_repository::TextRepository;
       // Add this line
 }
 

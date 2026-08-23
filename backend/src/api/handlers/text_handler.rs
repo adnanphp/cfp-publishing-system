@@ -1,6 +1,6 @@
 use actix_web::{HttpResponse, Responder, web};
 use serde_json::json;
-use crate::infrastructure::database::repositories::TextRepository;
+use crate::infrastructure::database::repositories::text_repository;
 
 pub async fn get_texts(repo: web::Data<TextRepository>) -> impl Responder {
     match repo.get_all().await {
