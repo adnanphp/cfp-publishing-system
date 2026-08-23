@@ -3,7 +3,7 @@ use sqlx::PgPool;
 
 #[get("/api/downloads/test")]
 pub async fn test_downloads(pool: web::Data<PgPool>) -> HttpResponse {
-    match sqlx::query("SELECT COUNT(*) as count FROM downloads")
+    match sqlx::query!("SELECT COUNT(*) as count FROM downloads")
         .fetch_one(pool.get_ref())
         .await
     {
@@ -26,7 +26,7 @@ pub async fn test_downloads(pool: web::Data<PgPool>) -> HttpResponse {
 
 #[get("/api/downloads/sample")]
 pub async fn sample_downloads(pool: web::Data<PgPool>) -> HttpResponse {
-    match sqlx::query("SELECT download_id, member_id, text_id, download_date, country FROM downloads LIMIT 5")
+    match sqlx::query!("SELECT download_id, member_id, text_id, download_date, country FROM downloads LIMIT 5")
         .fetch_all(pool.get_ref())
         .await
     {

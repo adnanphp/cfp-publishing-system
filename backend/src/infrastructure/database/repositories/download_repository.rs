@@ -13,7 +13,7 @@ impl DownloadRepository {
     }
     
     pub async fn get_all(&self) -> Result<Vec<Download>, Error> {
-        let rows = sqlx::query(
+        let rows = sqlx::query!(
             r#"
             SELECT 
                 download_id, member_id, text_id, download_date, 
@@ -44,7 +44,7 @@ impl DownloadRepository {
     }
     
     pub async fn get_by_id(&self, download_id: u32) -> Result<Option<Download>, Error> {
-        let row = sqlx::query(
+        let row = sqlx::query!(
             r#"
             SELECT 
                 download_id, member_id, text_id, download_date, 
@@ -73,7 +73,7 @@ impl DownloadRepository {
     }
     
     pub async fn get_by_member(&self, member_id: u32) -> Result<Vec<Download>, Error> {
-        let rows = sqlx::query(
+        let rows = sqlx::query!(
             r#"
             SELECT 
                 download_id, member_id, text_id, download_date, 
@@ -105,7 +105,7 @@ impl DownloadRepository {
     }
     
     pub async fn get_by_text(&self, text_id: u32) -> Result<Vec<Download>, Error> {
-        let rows = sqlx::query(
+        let rows = sqlx::query!(
             r#"
             SELECT 
                 download_id, member_id, text_id, download_date, 
@@ -137,7 +137,7 @@ impl DownloadRepository {
     }
     
     pub async fn get_total_downloads(&self) -> Result<u32, Error> {
-        let row = sqlx::query("SELECT COUNT(*) as count FROM downloads")
+        let row = sqlx::query!("SELECT COUNT(*) as count FROM downloads")
             .fetch_one(&self.pool)
             .await?;
         
@@ -149,7 +149,7 @@ impl DownloadRepository {
         start_date: DateTime<Utc>, 
         end_date: DateTime<Utc>
     ) -> Result<Vec<Download>, Error> {
-        let rows = sqlx::query(
+        let rows = sqlx::query!(
             r#"
             SELECT 
                 download_id, member_id, text_id, download_date, 
@@ -182,7 +182,7 @@ impl DownloadRepository {
     }
     
     pub async fn create(&self, download: &Download) -> Result<Download, Error> {
-        let row = sqlx::query(
+        let row = sqlx::query!(
             r#"
             INSERT INTO downloads (member_id, text_id, download_date, ip_address, user_agent, country)
             VALUES ($1, $2, $3, $4, $5, $6)
@@ -212,7 +212,7 @@ impl DownloadRepository {
     }
     
     pub async fn get_downloads_by_country(&self) -> Result<Vec<(String, u32)>, Error> {
-        let rows = sqlx::query(
+        let rows = sqlx::query!(
             r#"
             SELECT country, COUNT(*) as count
             FROM downloads
@@ -232,7 +232,7 @@ impl DownloadRepository {
     }
     
     pub async fn get_popular_texts(&self, limit: u32) -> Result<Vec<(u32, u32)>, Error> {
-        let rows = sqlx::query(
+        let rows = sqlx::query!(
             r#"
             SELECT text_id, COUNT(*) as download_count
             FROM downloads

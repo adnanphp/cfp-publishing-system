@@ -4,12 +4,12 @@ use sqlx::PgPool;
 #[get("/api/downloads/stats")]
 pub async fn download_stats(pool: web::Data<PgPool>) -> HttpResponse {
     // Get total downloads count
-    let total_result = sqlx::query("SELECT COUNT(*) as count FROM downloads")
+    let total_result = sqlx::query!("SELECT COUNT(*) as count FROM downloads")
         .fetch_one(pool.get_ref())
         .await;
     
     // Get downloads by country
-    let by_country_result = sqlx::query(
+    let by_country_result = sqlx::query!(
         "SELECT country, COUNT(*) as count FROM downloads 
          WHERE country IS NOT NULL 
          GROUP BY country ORDER BY count DESC LIMIT 5"
@@ -18,7 +18,7 @@ pub async fn download_stats(pool: web::Data<PgPool>) -> HttpResponse {
     .await;
     
     // Get popular texts
-    let popular_texts_result = sqlx::query(
+    let popular_texts_result = sqlx::query!(
         "SELECT text_id, COUNT(*) as download_count FROM downloads 
          GROUP BY text_id ORDER BY download_count DESC LIMIT 5"
     )

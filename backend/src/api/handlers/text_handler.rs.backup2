@@ -1,0 +1,962 @@
+use actix_web::{web, HttpResponse, Responder};
+use serde::{Deserialize, Serialize};
+use validator::Validate;
+use chrono::{DateTime, Utc};
+use crate::api::handlers::{HandlerUtils, ApiResponse, PaginationQuery};
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct CreateTextRequest {
+    #[validate(length(min = 1, max = 255))]
+    pub title: String,
+    
+    #[validate(length(min = 10, max = 2000))]
+    pub abstract_text: Option<String>,
+    
+    #[validate(length(min = 1, max = 100))]
+    pub topic: Option<String>,
+    
+    pub keywords: Option<Vec<String>>,
+    
+    #[validate(length(min = 100))]
+    pub content: String,
+    
+    pub author_orcid: Option<String>,
+    
+    pub is_draft: Option<bool>,
+    
+    pub license_type: Option<String>,
+    
+    pub language: Option<String>,
+    
+    pub references: Option<Vec<String>>,
+    
+    pub categories: Option<Vec<String>>,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct UpdateTextRequest {
+    #[validate(length(min = 1, max = 255))]
+    pub title: Option<String>,
+    
+    #[validate(length(min = 10, max = 2000))]
+    pub abstract_text: Option<String>,
+    
+    #[validate(length(min = 1, max = 100))]
+    pub topic: Option<String>,
+    
+    pub keywords: Option<Vec<String>>,
+    
+    #[validate(length(min = 100))]
+    pub content: Option<String>,
+    
+    pub version_notes: Option<String>,
+    
+    pub status: Option<String>,
+    
+    pub license_type: Option<String>,
+    
+    pub language: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct SearchTextsQuery {
+    pub query: Option<String>,
+    pub topic: Option<String>,
+    pub author: Option<String>,
+    pub min_rating: Option<f64>,
+    pub min_downloads: Option<i32>,
+    pub date_from: Option<chrono::NaiveDate>,
+    pub date_to: Option<chrono::NaiveDate>,
+    pub status: Option<String>,
+    pub language: Option<String>,
+    pub categories: Option<Vec<String>>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TextResponse {
+    pub text_id: i32,
+    pub title: String,
+    pub abstract_text: Option<String>,
+    pub content_preview: String,
+    pub topic: Option<String>,
+    pub keywords: Vec<String>,
+    pub author_orcid: Option<String>,
+    pub author_name: Option<String>,
+    pub author_bio: Option<String>,
+    pub upload_date: chrono::NaiveDate,
+    pub last_updated: chrono::NaiveDate,
+    pub status: String,
+    pub version: i32,
+    pub download_count: i32,
+    pub total_donations: f64,
+    pub avg_rating: Option<f64>,
+    pub rating_count: i32,
+    pub comment_count: i32,
+    pub license_type: String,
+    pub language: String,
+    pub file_size: i64,
+    pub file_format: String,
+    pub word_count: i32,
+    pub reading_time_minutes: i32,
+    pub is_featured: bool,
+    pub categories: Vec<String>,
+    pub references: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TextDetailResponse {
+    pub text_id: i32,
+    pub title: String,
+    pub abstract_text: Option<String>,
+    pub content: String,
+    pub topic: Option<String>,
+    pub keywords: Vec<String>,
+    pub author_orcid: Option<String>,
+    pub author_name: Option<String>,
+    pub author_bio: Option<String>,
+    pub author_specialization: Option<String>,
+    pub author_h_index: Option<i32>,
+    pub upload_date: chrono::NaiveDate,
+    pub last_updated: chrono::NaiveDate,
+    pub status: String,
+    pub version: i32,
+    pub download_count: i32,
+    pub total_donations: f64,
+    pub avg_rating: Option<f64>,
+    pub rating_count: i32,
+    pub comment_count: i32,
+    pub license_type: String,
+    pub language: String,
+    pub file_size: i64,
+    pub file_format: String,
+    pub word_count: i32,
+    pub reading_time_minutes: i32,
+    pub is_featured: bool,
+    pub categories: Vec<String>,
+    pub references: Vec<String>,
+    pub version_history: Vec<TextVersion>,
+    pub related_texts: Vec<RelatedText>,
+    pub download_url: Option<String>,
+    pub can_download: bool,
+    pub can_comment: bool,
+    pub can_rate: bool,
+    pub can_donate: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub struct TextVersion {
+    pub version_id: i32,
+    pub version_number: i32,
+    pub changes: String,
+    pub submitted_date: chrono::NaiveDate,
+    pub review_date: Option<chrono::NaiveDate>,
+    pub status: String,
+    pub change_summary: String,
+    pub moderator_name: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RelatedText {
+    pub text_id: i32,
+    pub title: String,
+    pub author_name: String,
+    pub similarity_score: f64,
+    pub reason: String,
+}
+
+pub async fn get_texts(
+    query: web::Query<PaginationQuery>,
+) -> impl Responder {
+    let pagination = query.into_inner();
+    let page = pagination.get_page();
+    let limit = pagination.get_limit();
+
+    // Fetch texts from database
+    let texts = vec![
+        TextResponse {
+            text_id: 1,
+            title: "Sample Text".to_string(),
+            abstract_text: Some("This is a sample text abstract.".to_string()),
+            content_preview: "This is a preview of the text content...".to_string(),
+            topic: Some("Technology".to_string()),
+            keywords: vec!["sample".to_string(), "technology".to_string()],
+            author_orcid: Some("0000-0000-0000-0000".to_string()),
+            author_name: Some("John Doe".to_string()),
+            author_bio: Some("Expert in technology".to_string()),
+            upload_date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
+            last_updated: chrono::NaiveDate::from_ymd_opt(2023, 1, 15).unwrap(),
+            status: "published".to_string(),
+            version: 1,
+            download_count: 100,
+            total_donations: 500.0,
+            avg_rating: Some(4.5),
+            rating_count: 20,
+            comment_count: 15,
+            license_type: "CC BY 4.0".to_string(),
+            language: "en".to_string(),
+            file_size: 1024 * 1024, // 1MB
+            file_format: "PDF".to_string(),
+            word_count: 5000,
+            reading_time_minutes: 25,
+            is_featured: true,
+            categories: vec!["Technology".to_string(), "Science".to_string()],
+            references: vec!["Reference 1".to_string(), "Reference 2".to_string()],
+        },
+    ];
+
+    let response = crate::api::handlers::PaginatedResponse::new(texts, 1, page, limit);
+    ApiResponse::success(response).to_http_response(actix_web::http::StatusCode::OK)
+}
+
+pub async fn get_text(
+    req: actix_web::HttpRequest,
+    path: web::Path<i32>,
+) -> impl Responder {
+    let user_id = HandlerUtils::extract_user_id(&req).ok();
+    let text_id = path.into_inner();
+
+    // Fetch text details from database
+    let text = TextDetailResponse {
+        text_id,
+        title: "Sample Text".to_string(),
+        abstract_text: Some("This is a sample text abstract.".to_string()),
+        content: "Full text content goes here...".to_string(),
+        topic: Some("Technology".to_string()),
+        keywords: vec!["sample".to_string(), "technology".to_string()],
+        author_orcid: Some("0000-0000-0000-0000".to_string()),
+        author_name: Some("John Doe".to_string()),
+        author_bio: Some("Expert in technology".to_string()),
+        author_specialization: Some("Computer Science".to_string()),
+        author_h_index: Some(15),
+        upload_date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
+        last_updated: chrono::NaiveDate::from_ymd_opt(2023, 1, 15).unwrap(),
+        status: "published".to_string(),
+        version: 1,
+        download_count: 100,
+        total_donations: 500.0,
+        avg_rating: Some(4.5),
+        rating_count: 20,
+        comment_count: 15,
+        license_type: "CC BY 4.0".to_string(),
+        language: "en".to_string(),
+        file_size: 1024 * 1024, // 1MB
+        file_format: "PDF".to_string(),
+        word_count: 5000,
+        reading_time_minutes: 25,
+        is_featured: true,
+        categories: vec!["Technology".to_string(), "Science".to_string()],
+        references: vec!["Reference 1".to_string(), "Reference 2".to_string()],
+        version_history: vec![
+            TextVersion {
+                version_id: 1,
+                version_number: 1,
+                changes: "Initial version".to_string(),
+                submitted_date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
+                review_date: Some(chrono::NaiveDate::from_ymd_opt(2023, 1, 2).unwrap()),
+                status: "approved".to_string(),
+                change_summary: "First publication".to_string(),
+                moderator_name: Some("Moderator Name".to_string()),
+            },
+        ],
+        related_texts: vec![
+            RelatedText {
+                text_id: 2,
+                title: "Related Text".to_string(),
+                author_name: "Jane Smith".to_string(),
+                similarity_score: 0.75,
+                reason: "Same topic".to_string(),
+            },
+        ],
+        download_url: Some("/api/texts/1/download".to_string()),
+        can_download: true,
+        can_comment: true,
+        can_rate: true,
+        can_donate: true,
+    };
+
+    // Log view (not download)
+    if let Some(user_id) = user_id {
+        HandlerUtils::log_operation(
+            user_id,
+            "view_text",
+            "text",
+            Some(text_id),
+            "Viewed text details",
+        );
+    }
+
+    ApiResponse::success(text).to_http_response(actix_web::http::StatusCode::OK)
+}
+
+pub async fn create_text(
+    req: actix_web::HttpRequest,
+    request: web::Json<CreateTextRequest>,
+) -> impl Responder {
+    let user_id = match HandlerUtils::extract_user_id(&req) {
+        Ok(id) => id,
+        Err(resp) => return resp,
+    };
+
+    if let Err(validation_errors) = request.validate() {
+        return HandlerUtils::validate_request(&request.into_inner()).unwrap_err();
+    }
+
+    let text_request = request.into_inner();
+
+    // Create text in database
+    // This would typically involve:
+    // 1. Validate author ORCID (if provided)
+    // 2. Process content (strip formatting, calculate stats)
+    // 3. Create initial version
+    // 4. If not draft, send for moderation
+
+    let text_id = 123; // Generated ID
+
+    HandlerUtils::log_operation(
+        user_id,
+        "create_text",
+        "text",
+        Some(text_id),
+        &format!("Title: {}", text_request.title),
+    );
+
+    ApiResponse::success_with_message(
+        TextCreatedResponse {
+            text_id,
+            title: text_request.title,
+            status: if text_request.is_draft.unwrap_or(false) {
+                "draft".to_string()
+            } else {
+                "under_review".to_string()
+            },
+            version: 1,
+            upload_date: chrono::Utc::now().date_naive(),
+        },
+        if text_request.is_draft.unwrap_or(false) {
+            "Text saved as draft"
+        } else {
+            "Text submitted for review"
+        },
+    )
+    .to_http_response(actix_web::http::StatusCode::CREATED)
+}
+
+#[derive(Debug, Serialize)]
+pub struct TextCreatedResponse {
+    pub text_id: i32,
+    pub title: String,
+    pub status: String,
+    pub version: i32,
+    pub upload_date: chrono::NaiveDate,
+}
+
+pub async fn update_text(
+    req: actix_web::HttpRequest,
+    path: web::Path<i32>,
+    request: web::Json<UpdateTextRequest>,
+) -> impl Responder {
+    let user_id = match HandlerUtils::extract_user_id(&req) {
+        Ok(id) => id,
+        Err(resp) => return resp,
+    };
+
+    let text_id = path.into_inner();
+
+    if let Err(validation_errors) = request.validate() {
+        return HandlerUtils::validate_request(&request.into_inner()).unwrap_err();
+    }
+
+    let update_request = request.into_inner();
+
+    // Update text in database
+    // This would create a new version if content changed
+
+    HandlerUtils::log_operation(
+        user_id,
+        "update_text",
+        "text",
+        Some(text_id),
+        &format!("Version notes: {:?}", update_request.version_notes),
+    );
+
+    ApiResponse::success_with_message(
+        TextUpdatedResponse {
+            text_id,
+            version: 2,
+            status: "under_review".to_string(),
+            updated_at: chrono::Utc::now().date_naive(),
+        },
+        "Text updated successfully",
+    )
+    .to_http_response(actix_web::http::StatusCode::OK)
+}
+
+#[derive(Debug, Serialize)]
+pub struct TextUpdatedResponse {
+    pub text_id: i32,
+    pub version: i32,
+    pub status: String,
+    pub updated_at: chrono::NaiveDate,
+}
+
+pub async fn delete_text(
+    req: actix_web::HttpRequest,
+    path: web::Path<i32>,
+) -> impl Responder {
+    let user_id = match HandlerUtils::extract_user_id(&req) {
+        Ok(id) => id,
+        Err(resp) => return resp,
+    };
+
+    let text_id = path.into_inner();
+
+    // Check permissions and delete/archive text
+
+    HandlerUtils::log_operation(
+        user_id,
+        "delete_text",
+        "text",
+        Some(text_id),
+        "Text deleted/archived",
+    );
+
+    ApiResponse::success_with_message(
+        (),
+        "Text deleted successfully",
+    )
+    .to_http_response(actix_web::http::StatusCode::OK)
+}
+
+pub async fn download_text(
+    req: actix_web::HttpRequest,
+    path: web::Path<i32>,
+    request: web::Json<DownloadTextRequest>,
+) -> impl Responder {
+    let user_id = match HandlerUtils::extract_user_id(&req) {
+        Ok(id) => id,
+        Err(resp) => return resp,
+    };
+
+    let text_id = path.into_inner();
+
+    if let Err(validation_errors) = request.validate() {
+        return HandlerUtils::validate_request(&request.into_inner()).unwrap_err();
+    }
+
+    let download_request = request.into_inner();
+
+    // Check download limits
+    // Generate download URL/token
+    // Record download in database
+
+    HandlerUtils::log_operation(
+        user_id,
+        "download_text",
+        "text",
+        Some(text_id),
+        &format!("Format: {}", download_request.format),
+    );
+
+    ApiResponse::success(
+        DownloadTextResponse {
+            download_id: 456,
+            text_id,
+            download_url: "/downloads/token_here".to_string(),
+            expires_at: Utc::now() + chrono::Duration::hours(1),
+            file_size: 1024 * 1024, // 1MB
+            format: download_request.format,
+        },
+    )
+    .to_http_response(actix_web::http::StatusCode::OK)
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct DownloadTextRequest {
+    pub format: String, // "pdf", "epub", "txt"
+    pub agree_to_terms: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DownloadTextResponse {
+    pub download_id: i32,
+    pub text_id: i32,
+    pub download_url: String,
+    pub expires_at: DateTime<Utc>,
+    pub file_size: i64,
+    pub format: String,
+}
+
+pub async fn get_text_comments(
+    path: web::Path<i32>,
+    query: web::Query<PaginationQuery>,
+) -> impl Responder {
+    let text_id = path.into_inner();
+    let pagination = query.into_inner();
+    let page = pagination.get_page();
+    let limit = pagination.get_limit();
+
+    // Fetch comments for text
+    let comments = vec![
+        TextCommentResponse {
+            comment_id: 1,
+            member_id: 123,
+            member_name: "John Doe".to_string(),
+            member_avatar: None,
+            content: "Great article!".to_string(),
+            date: Utc::now() - chrono::Duration::days(1),
+            rating: Some(5),
+            likes: 3,
+            replies: 1,
+            is_public: true,
+            status: "active".to_string(),
+            parent_comment_id: None,
+            replies: vec![
+                ReplyCommentResponse {
+                    comment_id: 2,
+                    member_id: 124,
+                    member_name: "Jane Smith".to_string(),
+                    content: "I agree!".to_string(),
+                    date: Utc::now() - chrono::Duration::hours(12),
+                    likes: 1,
+                },
+            ],
+        },
+    ];
+
+    let response = crate::api::handlers::PaginatedResponse::new(comments, 1, page, limit);
+    ApiResponse::success(response).to_http_response(actix_web::http::StatusCode::OK)
+}
+
+#[derive(Debug, Serialize)]
+pub struct TextCommentResponse {
+    pub comment_id: i32,
+    pub member_id: i32,
+    pub member_name: String,
+    pub member_avatar: Option<String>,
+    pub content: String,
+    pub date: DateTime<Utc>,
+    pub rating: Option<i32>,
+    pub likes: i32,
+    # pub replies: i32,
+    pub is_public: bool,
+    pub status: String,
+    pub parent_comment_id: Option<i32>,
+
+#[derive(Debug, Serialize)]
+}
+pub struct ReplyCommentResponse {
+    pub comment_id: i32,
+    pub member_id: i32,
+    pub member_name: String,
+    pub content: String,
+    pub date: DateTime<Utc>,
+    pub likes: i32,
+}
+
+pub async fn get_text_versions(
+    path: web::Path<i32>,
+) -> impl Responder {
+    let text_id = path.into_inner();
+
+    // Fetch version history
+    let versions = vec![
+        VersionDetailResponse {
+            version_id: 1,
+            version_number: 1,
+            changes: "Initial version".to_string(),
+            submitted_date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
+            review_date: Some(chrono::NaiveDate::from_ymd_opt(2023, 1, 2).unwrap()),
+            status: "approved".to_string(),
+            change_summary: "First publication".to_string(),
+            moderator_id: Some(1),
+            moderator_name: Some("Moderator Name".to_string()),
+            diff_summary: "Added introduction and conclusion".to_string(),
+            word_count_change: 500,
+        },
+        VersionDetailResponse {
+            version_id: 2,
+            version_number: 2,
+            changes: "Updated references".to_string(),
+            submitted_date: chrono::NaiveDate::from_ymd_opt(2023, 1, 15).unwrap(),
+            review_date: Some(chrono::NaiveDate::from_ymd_opt(2023, 1, 16).unwrap()),
+            status: "approved".to_string(),
+            change_summary: "Updated references section".to_string(),
+            moderator_id: Some(1),
+            moderator_name: Some("Moderator Name".to_string()),
+            diff_summary: "Added 3 new references".to_string(),
+            word_count_change: 50,
+        },
+    ];
+
+    ApiResponse::success(versions).to_http_response(actix_web::http::StatusCode::OK)
+}
+
+#[derive(Debug, Serialize)]
+pub struct VersionDetailResponse {
+    pub version_id: i32,
+    pub version_number: i32,
+    pub changes: String,
+    pub submitted_date: chrono::NaiveDate,
+    pub review_date: Option<chrono::NaiveDate>,
+    pub status: String,
+    pub change_summary: String,
+    pub moderator_id: Option<i32>,
+    pub moderator_name: Option<String>,
+    pub diff_summary: String,
+    pub word_count_change: i32,
+}
+
+pub async fn search_texts(
+    query: web::Query<SearchTextsQuery>,
+    pagination: web::Query<PaginationQuery>,
+) -> impl Responder {
+    let search_query = query.into_inner();
+    let pagination = pagination.into_inner();
+    let page = pagination.get_page();
+    let limit = pagination.get_limit();
+
+    // Perform search in database
+    let results = vec![
+        SearchResultResponse {
+            text_id: 1,
+            title: "Sample Text".to_string(),
+            abstract_text: Some("This is a sample text abstract.".to_string()),
+            author_name: "John Doe".to_string(),
+            topic: Some("Technology".to_string()),
+            upload_date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
+            download_count: 100,
+            avg_rating: Some(4.5),
+            relevance_score: 0.95,
+            keywords: vec!["sample".to_string(), "technology".to_string()],
+            snippet: "This is a text snippet containing the search term...".to_string(),
+        },
+    ];
+
+    let response = crate::api::handlers::PaginatedResponse::new(results, 1, page, limit);
+    ApiResponse::success(response).to_http_response(actix_web::http::StatusCode::OK)
+}
+
+#[derive(Debug, Serialize)]
+pub struct SearchResultResponse {
+    pub text_id: i32,
+    pub title: String,
+    pub abstract_text: Option<String>,
+    pub author_name: String,
+    pub topic: Option<String>,
+    pub upload_date: chrono::NaiveDate,
+    pub download_count: i32,
+    pub avg_rating: Option<f64>,
+    pub relevance_score: f64,
+    pub keywords: Vec<String>,
+    pub snippet: String,
+}
+
+pub async fn get_text_analytics(
+    path: web::Path<i32>,
+) -> impl Responder {
+    let text_id = path.into_inner();
+
+    // Fetch analytics data
+    let analytics = TextAnalyticsResponse {
+        text_id,
+        views_today: 10,
+        views_week: 50,
+        views_month: 200,
+        downloads_today: 5,
+        downloads_week: 25,
+        downloads_month: 100,
+        donations_today: 25.0,
+        donations_week: 150.0,
+        donations_month: 500.0,
+        avg_reading_time: 15, // minutes
+        completion_rate: 0.75, // 75%
+        popular_sections: vec![
+            SectionAnalytics {
+                section: "Introduction".to_string(),
+                views: 180,
+                avg_time_spent: 120, // seconds
+            },
+            SectionAnalytics {
+                section: "Conclusion".to_string(),
+                views: 150,
+                avg_time_spent: 90, // seconds
+            },
+        ],
+        reader_locations: vec![
+            LocationAnalytics {
+                country: "United States".to_string(),
+                readers: 45,
+                percentage: 0.45,
+            },
+            LocationAnalytics {
+                country: "United Kingdom".to_string(),
+                readers: 20,
+                percentage: 0.20,
+            },
+        ],
+        reader_devices: vec![
+            DeviceAnalytics {
+                device_type: "Desktop".to_string(),
+                percentage: 0.60,
+            },
+            DeviceAnalytics {
+                device_type: "Mobile".to_string(),
+                percentage: 0.35,
+            },
+        ],
+        citation_count: 5,
+        social_shares: 15,
+    };
+
+    ApiResponse::success(analytics).to_http_response(actix_web::http::StatusCode::OK)
+}
+
+#[derive(Debug, Serialize)]
+pub struct TextAnalyticsResponse {
+    pub text_id: i32,
+    pub views_today: i32,
+    pub views_week: i32,
+    pub views_month: i32,
+    pub downloads_today: i32,
+    pub downloads_week: i32,
+    pub downloads_month: i32,
+    pub donations_today: f64,
+    pub donations_week: f64,
+    pub donations_month: f64,
+    pub avg_reading_time: i32, // minutes
+    pub completion_rate: f64,
+    pub popular_sections: Vec<SectionAnalytics>,
+    pub reader_locations: Vec<LocationAnalytics>,
+    pub reader_devices: Vec<DeviceAnalytics>,
+    pub citation_count: i32,
+    pub social_shares: i32,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SectionAnalytics {
+    pub section: String,
+    pub views: i32,
+    pub avg_time_spent: i32, // seconds
+}
+
+#[derive(Debug, Serialize)]
+pub struct LocationAnalytics {
+    pub country: String,
+    pub readers: i32,
+    pub percentage: f64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DeviceAnalytics {
+    pub device_type: String,
+    pub percentage: f64,
+}
+
+pub async fn export_text(
+    path: web::Path<i32>,
+    query: web::Query<ExportFormatQuery>,
+) -> impl Responder {
+    let text_id = path.into_inner();
+    let format = query.into_inner().format;
+
+    // Generate export in requested format
+    let content = match format.as_str() {
+        "pdf" => b"PDF content".to_vec(),
+        "epub" => b"EPUB content".to_vec(),
+        "txt" => b"Plain text content".to_vec(),
+        _ => b"Unsupported format".to_vec(),
+    };
+
+    let filename = format!("text_{}.{}", text_id, format);
+    let content_type = match format.as_str() {
+        "pdf" => "application/pdf",
+        "epub" => "application/epub+zip",
+        "txt" => "text/plain",
+        _ => "application/octet-stream",
+    };
+
+    HttpResponse::Ok()
+        .content_type(content_type)
+        .append_header(("Content-Disposition", format!("attachment; filename=\"{}\"", filename)))
+        .body(content)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ExportFormatQuery {
+    pub format: String,
+}
+
+pub async fn batch_upload_texts(
+    req: actix_web::HttpRequest,
+    request: web::Json<BatchUploadRequest>,
+) -> impl Responder {
+    let user_id = match HandlerUtils::extract_user_id(&req) {
+        Ok(id) => id,
+        Err(resp) => return resp,
+    };
+
+    if let Err(validation_errors) = request.validate() {
+        return HandlerUtils::validate_request(&request.into_inner()).unwrap_err();
+    }
+
+    let batch_request = request.into_inner();
+
+    // Process batch upload
+    let results: Vec<BatchUploadResult> = batch_request.texts
+        .into_iter()
+        .enumerate()
+        .map(|(i, text)| {
+            BatchUploadResult {
+                index: i as i32,
+                title: text.title,
+                status: "success".to_string(),
+                text_id: Some(1000 + i as i32),
+                message: Some("Uploaded successfully".to_string()),
+            }
+        })
+        .collect();
+
+    HandlerUtils::log_operation(
+        user_id,
+        "batch_upload",
+        "text",
+        None,
+        &format!("Uploaded {} texts", results.len()),
+    );
+
+    ApiResponse::success(BatchUploadResponse {
+        batch_id: "batch_123".to_string(),
+        total: results.len() as i32,
+        successful: results.len() as i32,
+        failed: 0,
+        results,
+    })
+    .to_http_response(actix_web::http::StatusCode::CREATED)
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct BatchUploadRequest {
+    pub texts: Vec<CreateTextRequest>,
+    pub metadata: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct BatchUploadResponse {
+    pub batch_id: String,
+    pub total: i32,
+    pub successful: i32,
+    pub failed: i32,
+    pub results: Vec<BatchUploadResult>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct BatchUploadResult {
+    pub index: i32,
+    pub title: String,
+    pub status: String,
+    pub text_id: Option<i32>,
+    pub message: Option<String>,
+}
+
+pub async fn get_popular_texts() -> impl Responder {
+    // Fetch popular texts (based on downloads, donations, ratings)
+    let popular_texts = vec![
+        PopularTextResponse {
+            text_id: 1,
+            title: "Most Downloaded Text".to_string(),
+            author_name: "John Doe".to_string(),
+            download_count: 1000,
+            donation_total: 5000.0,
+            avg_rating: 4.8,
+            rank: 1,
+            trend: "up".to_string(),
+        },
+        PopularTextResponse {
+            text_id: 2,
+            title: "Top Donated Text".to_string(),
+            author_name: "Jane Smith".to_string(),
+            download_count: 800,
+            donation_total: 7500.0,
+            avg_rating: 4.6,
+            rank: 2,
+            trend: "stable".to_string(),
+        },
+    ];
+
+    ApiResponse::success(popular_texts).to_http_response(actix_web::http::StatusCode::OK)
+}
+
+#[derive(Debug, Serialize)]
+pub struct PopularTextResponse {
+    pub text_id: i32,
+    pub title: String,
+    pub author_name: String,
+    pub download_count: i32,
+    pub donation_total: f64,
+    pub avg_rating: f64,
+    pub rank: i32,
+    pub trend: String,
+}
+
+pub async fn get_recent_texts() -> impl Responder {
+    // Fetch recently uploaded texts
+    let recent_texts = vec![
+        RecentTextResponse {
+            text_id: 3,
+            title: "New Research Paper".to_string(),
+            author_name: "New Author".to_string(),
+            upload_date: chrono::Utc::now().date_naive(),
+            topic: "Science".to_string(),
+            status: "published".to_string(),
+        },
+    ];
+
+    ApiResponse::success(recent_texts).to_http_response(actix_web::http::StatusCode::OK)
+}
+
+#[derive(Debug, Serialize)]
+pub struct RecentTextResponse {
+    pub text_id: i32,
+    pub title: String,
+    pub author_name: String,
+    pub upload_date: chrono::NaiveDate,
+    pub topic: String,
+    pub status: String,
+}
+
+pub async fn get_author_texts(
+    path: web::Path<String>,
+    query: web::Query<PaginationQuery>,
+) -> impl Responder {
+    let orcid = path.into_inner();
+    let pagination = query.into_inner();
+    let page = pagination.get_page();
+    let limit = pagination.get_limit();
+
+    // Fetch texts by author ORCID
+    let texts = vec![
+        AuthorTextResponse {
+            text_id: 1,
+            title: "Author's First Paper".to_string(),
+            upload_date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
+            status: "published".to_string(),
+            download_count: 100,
+            total_donations: 500.0,
+            avg_rating: Some(4.5),
+        },
+    ];
+
+    let response = crate::api::handlers::PaginatedResponse::new(texts, 1, page, limit);
+    ApiResponse::success(response).to_http_response(actix_web::http::StatusCode::OK)
+}
+
+#[derive(Debug, Serialize)]
+pub struct AuthorTextResponse {
+    pub text_id: i32,
+    pub title: String,
+    pub upload_date: chrono::NaiveDate,
+    pub status: String,
+    pub download_count: i32,
+    pub total_donations: f64,
+    pub avg_rating: Option<f64>,
+}

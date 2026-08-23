@@ -58,7 +58,7 @@ async fn main() -> std::io::Result<()> {
     println!("✅ Database connected to cfp_db!");
     println!("🌐 Server: http://0.0.0.0:3000");
     println!("✅ Health: http://localhost:3000/health");
-    println("✅ CORS: Enabled for all origins");
+    println!(" ✅ CORS: Enabled for all origins");
     println!("📚 API: http://localhost:3000/api/status");
     println!("👥 Members: http://localhost:3000/api/members");
     println!("✍️  Authors: http://localhost:3000/api/authors");
