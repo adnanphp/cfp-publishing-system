@@ -12,7 +12,7 @@ impl AuthorRepository {
     }
     
     pub async fn get_all(&self) -> Result<Vec<Author>, Error> {
-        let rows = sqlx::query!(
+        let rows = sqlx::query(
             r#"
             SELECT orcid, member_id, bio, specialization, h_index, total_downloads
             FROM authors 
@@ -35,7 +35,7 @@ impl AuthorRepository {
     }
     
     pub async fn get_by_orcid(&self, orcid: &str) -> Result<Option<Author>, Error> {
-        let row = sqlx::query!(
+        let row = sqlx::query(
             r#"
             SELECT orcid, member_id, bio, specialization, h_index, total_downloads
             FROM authors 

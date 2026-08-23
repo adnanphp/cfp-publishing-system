@@ -3,7 +3,7 @@ use sqlx::PgPool;
 use serde_json::json;
 
 pub async fn get_downloads(pool: web::Data<PgPool>) -> impl Responder {
-    match sqlx::query!(
+    match sqlx::query(
         r#"
         SELECT 
             download_id,
@@ -52,7 +52,7 @@ pub async fn get_downloads(pool: web::Data<PgPool>) -> impl Responder {
 }
 
 pub async fn get_download_count(pool: web::Data<PgPool>) -> impl Responder {
-    match sqlx::query!("SELECT COUNT(*) as count FROM downloads")
+    match sqlx::query("SELECT COUNT(*) as count FROM downloads")
         .fetch_one(pool.get_ref())
         .await
     {
@@ -77,7 +77,7 @@ pub async fn get_download_count(pool: web::Data<PgPool>) -> impl Responder {
 }
 
 pub async fn get_download_stats(pool: web::Data<PgPool>) -> impl Responder {
-    match sqlx::query!(
+    match sqlx::query(
         r#"
         SELECT 
             COUNT(*) as total_downloads,
@@ -118,7 +118,7 @@ pub async fn get_downloads_by_text(
 ) -> impl Responder {
     let text_id = path.into_inner();
     
-    match sqlx::query!(
+    match sqlx::query(
         r#"
         SELECT 
             COUNT(*) as download_count,
@@ -155,7 +155,7 @@ pub async fn get_downloads_by_text(
 }
 
 pub async fn get_top_downloaded_texts(pool: web::Data<PgPool>) -> impl Responder {
-    match sqlx::query!(
+    match sqlx::query(
         r#"
         SELECT 
             t.text_id,
@@ -202,7 +202,7 @@ pub async fn get_downloads_by_member(
 ) -> impl Responder {
     let member_id = path.into_inner();
     
-    match sqlx::query!(
+    match sqlx::query(
         r#"
         SELECT 
             COUNT(*) as download_count,

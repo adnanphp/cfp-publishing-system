@@ -12,7 +12,7 @@ impl TextRepository {
     }
     
     pub async fn get_all(&self) -> Result<Vec<Text>, Error> {
-        let rows = sqlx::query!(
+        let rows = sqlx::query(
             r#"
             SELECT 
                 text_id, author_orcid, title, abstract as abstract_text, topic, 
@@ -54,7 +54,7 @@ impl TextRepository {
     }
     
     pub async fn get_by_id(&self, text_id: u32) -> Result<Option<Text>, Error> {
-        let row = sqlx::query!(
+        let row = sqlx::query(
             r#"
             SELECT 
                 text_id, author_orcid, title, abstract as abstract_text, topic, 
@@ -95,7 +95,7 @@ impl TextRepository {
     }
     
     pub async fn get_by_author(&self, author_orcid: &str) -> Result<Vec<Text>, Error> {
-        let rows = sqlx::query!(
+        let rows = sqlx::query(
             r#"
             SELECT 
                 text_id, author_orcid, title, abstract as abstract_text, topic, 
