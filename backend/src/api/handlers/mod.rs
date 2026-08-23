@@ -8,8 +8,8 @@ pub mod member_handler;
 pub mod text_handler;
 
 // Re-export handler functions
-pub use auth_handler::*;
-pub use author_handler::*;
+//pub use auth_handler::*;
+//pub use author_handler::*;
 pub use db_test_handler::*;
 //pub use downloads_handler::*;
 //pub use download_stats::*;
