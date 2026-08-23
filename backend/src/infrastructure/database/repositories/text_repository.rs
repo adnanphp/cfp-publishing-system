@@ -5,8 +5,17 @@ pub async fn get_text_by_id(pool: &PgPool, text_id: i32) -> Result<Option<Text>,
     let row = sqlx::query!(
         r#"
         SELECT 
-            text_id, author_orcid, title, abstract as abstract_text, topic, 
-            version, upload_date, status, download_count
+            text_id, 
+            author_orcid, 
+            title, 
+            abstract as abstract_text, 
+            topic, 
+            version, 
+            upload_date, 
+            status, 
+            download_count,
+            0 as total_donations,
+            0.0 as avg_rating
         FROM texts 
         WHERE text_id = $1
         "#,
@@ -25,6 +34,8 @@ pub async fn get_text_by_id(pool: &PgPool, text_id: i32) -> Result<Option<Text>,
         upload_date: r.upload_date.unwrap_or_default(),
         status: r.status.unwrap_or_else(|| "draft".to_string()),
         download_count: r.download_count.unwrap_or(0) as u32,
+        total_donations: r.total_donations,
+        avg_rating: r.avg_rating,
     }))
 }
 
@@ -32,8 +43,17 @@ pub async fn list_texts_by_author(pool: &PgPool, author_orcid: &str) -> Result<V
     let rows = sqlx::query!(
         r#"
         SELECT 
-            text_id, author_orcid, title, abstract as abstract_text, topic, 
-            version, upload_date, status, download_count
+            text_id, 
+            author_orcid, 
+            title, 
+            abstract as abstract_text, 
+            topic, 
+            version, 
+            upload_date, 
+            status, 
+            download_count,
+            0 as total_donations,
+            0.0 as avg_rating
         FROM texts 
         WHERE author_orcid = $1
         ORDER BY upload_date DESC
@@ -55,6 +75,8 @@ pub async fn list_texts_by_author(pool: &PgPool, author_orcid: &str) -> Result<V
             upload_date: r.upload_date.unwrap_or_default(),
             status: r.status.unwrap_or_else(|| "draft".to_string()),
             download_count: r.download_count.unwrap_or(0) as u32,
+            total_donations: r.total_donations,
+            avg_rating: r.avg_rating,
         })
         .collect())
 }
