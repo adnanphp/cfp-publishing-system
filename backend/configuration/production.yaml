@@ -1,0 +1,23 @@
+# backend/configuration/production.yaml
+application:
+  host: "0.0.0.0"
+  base_url: "https://api.cfp.example.com"
+  frontend_url: "https://cfp.example.com"
+  enable_swagger: false
+  log_level: "warn"
+  workers: 8
+
+database:
+  require_ssl: true
+
+redis:
+  max_connections: 50
+
+jwt:
+  access_token_expiration_minutes: 5
+  refresh_token_expiration_days: 7
+
+security:
+  cors_origins:
+    - "https://cfp.example.com"
+  rate_limit_requests: 60

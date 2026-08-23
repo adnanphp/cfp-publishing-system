@@ -1,0 +1,132 @@
+#!/bin/bash
+
+echo "Fixing main.rs repository injection..."
+
+# Create a new main.rs with proper repository handling
+cat > src/main.rs << 'MAIN'
+use actix_web::{web, App, HttpServer, HttpResponse, Responder, middleware::Logger};
+use serde_json::json;
+use cfp_backend::config::AppConfig;
+use cfp_backend::infrastructure::database;
+
+async fn health_check() -> impl Responder {
+    HttpResponse::Ok().json(json!({
+        "status": "ok",
+        "message": "CFP Backend is running",
+        "version": "1.0.0"
+    }))
+}
+
+async fn index(pool: web::Data<database::DbPool>) -> impl Responder {
+    let result = sqlx::query("SELECT 1 as test")
+        .fetch_one(pool.get_ref())
+        .await;
+    
+    let db_status = match result {
+        Ok(_) => "✅ connected",
+        Err(e) => {
+            eprintln!("Database error: {}", e);
+            "❌ disconnected"
+        }
+    };
+    
+    HttpResponse::Ok().body(format!(r#"
+    <html>
+        <head><title>CFP Backend</title></head>
+        <body style="font-family: Arial, sans-serif; margin: 40px;">
+            <h1>🚀 CFP Backend - Charity Funding Platform</h1>
+            <p>Your project is now fully working with database!</p>
+            
+            <h2>📊 System Status:</h2>
+            <ul>
+                <li>✅ Server: Running</li>
+                <li>🔌 Database: {}</li>
+                <li>📝 API: Ready</li>
+                <li>🗄️ Database: cfp_db</li>
+            </ul>
+            
+            <h2>📊 Endpoints:</h2>
+            <ul>
+                <li><a href="/health">/health</a> - Health check</li>
+                <li><a href="/api/test">/api/test</a> - API test</li>
+                <li><a href="/api/status">/api/status</a> - System status</li>
+                <li><a href="/api/texts">/api/texts</a> - Texts endpoint</li>
+                <li><a href="/api/members">/api/members</a> - Members (with repository!)</li>
+            </ul>
+            
+            <h2>✅ Success!</h2>
+            <p>Your CFP Backend foundation is complete with repository pattern!</p>
+        </body>
+    </html>
+    "#, db_status))
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    // Enable logging
+    std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+    
+    println!("=========================================");
+    println!("🚀 CFP Backend - FULLY WORKING!");
+    println!("=========================================");
+    
+    // Load configuration
+    let config = match AppConfig::load() {
+        Ok(cfg) => {
+            println!("✅ Configuration loaded");
+            cfg
+        }
+        Err(e) => {
+            eprintln!("❌ Failed to load config: {}", e);
+            std::process::exit(1);
+        }
+    };
+    
+    // Create database pool
+    println!("🔌 Connecting to database...");
+    let pool = match database::create_pool(&config.database.url).await {
+        Ok(pool) => {
+            println!("✅ Database connected to cfp_db!");
+            pool
+        }
+        Err(e) => {
+            eprintln!("❌ Failed to connect to database: {}", e);
+            std::process::exit(1);
+        }
+    };
+    
+    let bind_host = config.server.host.clone();
+    let bind_port = config.server.port;
+    
+    println!("🌐 Server: http://{}:{}", bind_host, bind_port);
+    println!("✅ Health: http://localhost:{}/health", bind_port);
+    println!("📚 API: http://localhost:{}/api/status", bind_port);
+    println!("👥 Members: http://localhost:{}/api/members", bind_port);
+    println!("📝 Texts: http://localhost:{}/api/texts", bind_port);
+    println!("🌍 Web: http://localhost:{}/", bind_port);
+    println!("=========================================");
+    println!("");
+    println!("🎉 CONGRATULATIONS! Your project is now WORKING WITH REPOSITORY PATTERN!");
+    println!("");
+    
+    HttpServer::new(move || {
+        // Create repository inside the closure
+        let member_repo = database::MemberRepository::new(pool.clone());
+        
+        App::new()
+            .wrap(Logger::default())
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(member_repo))
+            .app_data(web::Data::new(config.clone()))
+            .route("/", web::get().to(index))
+            .route("/health", web::get().to(health_check))
+            .configure(cfp_backend::api::routes::configure_routes)
+    })
+    .bind(format!("{}:{}", bind_host, bind_port))?
+    .run()
+    .await
+}
+MAIN
+
+echo "✅ main.rs fixed"

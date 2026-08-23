@@ -1,0 +1,91 @@
+# ============================================
+# Rust Toolchain Configuration
+# ============================================
+# This file pins the Rust toolchain version for the project
+# Ensures consistent builds across all environments
+
+[toolchain]
+# Use the latest stable Rust version
+channel = "stable"
+# Alternative: pin to specific version
+# channel = "1.75.0"
+
+# Toolchain components
+components = ["rustc", "cargo", "rustfmt", "clippy", "rust-docs", "rust-analysis"]
+
+# Target platforms (optional)
+# targets = ["x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "x86_64-apple-darwin"]
+
+# Profile settings
+profile = "default"
+
+# Override minimal version requirements (optional)
+# [toolchain.overrides]
+# "x86_64-unknown-linux-gnu" = { channel = "nightly" }
+
+# ============================================
+# rustup configuration
+# ============================================
+# Uncomment to configure rustup behavior
+
+# [rustup]
+# # Disable auto-self-update
+# disable_self_update = false
+
+# # Default host triple
+# default_host_triple = "x86_64-unknown-linux-gnu"
+
+# # Update the toolchain automatically
+# auto_update = true
+
+# ============================================
+# cargo configuration (can also be in .cargo/config.toml)
+# ============================================
+[build]
+# Build configuration
+rustflags = [
+    "-C", "target-cpu=native",
+    "-C", "link-arg=-fuse-ld=lld",  # Use LLD linker for faster builds
+]
+
+# Optimize for size or speed
+opt-level = 3  # Maximum optimization
+debug = false  # Disable debug symbols in release
+lto = true     # Link-time optimization
+codegen-units = 1  # Single codegen unit for better optimization
+
+[install]
+# Cargo install configuration
+locked = true
+profile = "release"
+
+[target.'cfg(all(target_arch = "x86_64", target_os = "linux"))']
+# Linux-specific settings
+rustflags = [
+    "-C", "target-feature=+crt-static",
+    "-C", "link-arg=-Wl,-z,relro,-z,now",
+]
+
+[target.'cfg(target_os = "windows")']
+# Windows-specific settings
+rustflags = []
+
+[target.'cfg(target_os = "macos")']
+# macOS-specific settings
+rustflags = [
+    "-C", "link-arg=-Wl,-dead_strip",
+]
+
+
+# ============================================
+# Rust Toolchain Configuration
+# ============================================
+# This file pins the Rust toolchain version for the project
+# Ensures consistent builds across all environments
+
+#[toolchain]
+# Use the latest stable Rust version
+#channel = "stable"
+
+# Toolchain components
+#components = ["rustc", "cargo", "rustfmt", "clippy"]

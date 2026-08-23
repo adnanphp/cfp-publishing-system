@@ -1,0 +1,34 @@
+pub mod admin;
+pub mod author;
+pub mod charity;
+pub mod comment;
+pub mod committee;
+pub mod committee_membership;
+pub mod download;
+pub mod donation;
+pub mod member;
+pub mod message;
+pub mod moderator;
+pub mod notification;
+pub mod plagiarism_case;
+pub mod text;
+pub mod text_version;
+pub mod vote;
+
+// Re-export for convenience
+pub use admin::*;
+pub use author::*;
+pub use charity::*;
+pub use comment::*;
+pub use committee::*;
+pub use committee_membership::*;
+pub use download::*;
+pub use donation::*;
+pub use member::*;
+pub use message::*;
+pub use moderator::*;
+pub use notification::*;
+pub use plagiarism_case::*;
+pub use text::*;
+pub use text_version::*;
+pub use vote::*;

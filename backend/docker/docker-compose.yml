@@ -1,0 +1,231 @@
+# ============================================
+# CFP System - Docker Compose Configuration
+# ============================================
+# Complete development and production environment
+
+version: '3.8'
+
+services:
+  # ============ BACKEND API SERVICE ============
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: runtime
+    container_name: cfp-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENVIRONMENT=${APP_ENVIRONMENT:-production}
+      - DATABASE_URL=postgresql://cfp:password@postgres:5432/cfp
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-your-jwt-secret}
+    env_file:
+      - ../.env.production
+    volumes:
+      - cfp_uploads:/data/uploads
+      - cfp_logs:/data/logs
+      - ./config:/app/config:ro
+    depends_on:
+      - postgres
+      - redis
+      - mailhog
+    networks:
+      - cfp-network
+    healthcheck:
+      test: ["CMD", "/app/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============ DATABASE (PostgreSQL) ============
+  postgres:
+    image: postgres:15-alpine
+    container_name: cfp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cfp
+      POSTGRES_USER: cfp
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./docker/postgres/backup:/backup
+    networks:
+      - cfp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cfp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============ REDIS CACHE ============
+  redis:
+    image: redis:7-alpine
+    container_name: cfp-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispass}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cfp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============ EMAIL TESTING (MailHog) ============
+  mailhog:
+    image: mailhog/mailhog
+    container_name: cfp-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - cfp-network
+
+  # ============ DATABASE ADMIN (pgAdmin) ============
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: cfp-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@cfp.example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - cfp-network
+    depends_on:
+      - postgres
+
+  # ============ REVERSE PROXY (Nginx) ============
+  nginx:
+    image: nginx:alpine
+    container_name: cfp-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      - cfp_logs:/var/log/nginx
+    depends_on:
+      - backend
+    networks:
+      - cfp-network
+
+  # ============ MONITORING (Prometheus) ============
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: cfp-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - cfp-network
+
+  # ============ METRICS (Grafana) ============
+  grafana:
+    image: grafana/grafana:latest
+    container_name: cfp-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - cfp-network
+    depends_on:
+      - prometheus
+
+  # ============ LOG AGGREGATION (Loki) ============
+  loki:
+    image: grafana/loki:latest
+    container_name: cfp-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+      - ./docker/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+    networks:
+      - cfp-network
+
+  # ============ DATABASE BACKUP ============
+  backup:
+    image: prodrigestivill/postgres-backup-local
+    container_name: cfp-backup
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: cfp
+      POSTGRES_USER: cfp
+      POSTGRES_PASSWORD: password
+      POSTGRES_EXTRA_OPTS: "-Z9 --schema=public --blobs"
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 6
+      HEALTHCHECK_PORT: 8080
+    volumes:
+      - backup_data:/backups
+    networks:
+      - cfp-network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  cfp_uploads:
+    driver: local
+  cfp_logs:
+    driver: local
+  pgadmin_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+  backup_data:
+    driver: local
+
+networks:
+  cfp-network:
+    driver: bridge
+    name: cfp-network

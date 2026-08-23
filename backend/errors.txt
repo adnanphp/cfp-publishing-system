@@ -1,0 +1,20 @@
+error[E0583]: file not found for module `config`
+error[E0432]: unresolved import `uuid`
+error[E0433]: failed to resolve: could not find `messaging` in `infrastructure`
+error[E0432]: unresolved import `uuid`
+error[E0433]: failed to resolve: could not find `repositories` in `database`
+error[E0433]: failed to resolve: could not find `repositories` in `database`
+error[E0432]: unresolved import `uuid`
+error[E0432]: unresolved import `crate::application::dto::responses::ApiResponse`
+error[E0432]: unresolved import `uuid`
+error[E0432]: unresolved import `crate::application::dto::responses::ApiResponse`
+error[E0432]: unresolved import `uuid`
+error[E0432]: unresolved import `crate::application::dto::responses::ApiResponse`
+error[E0432]: unresolved import `uuid`
+error[E0432]: unresolved import `crate::application::dto::responses::ApiResponse`
+error[E0432]: unresolved import `uuid`
+error[E0432]: unresolved import `crate::application::dto::responses::ApiResponse`
+error[E0432]: unresolved import `uuid`
+error[E0432]: unresolved import `crate::application::dto::responses::ApiResponse`
+error[E0432]: unresolved import `uuid`
+error[E0432]: unresolved import `crate::application::dto::responses::ApiResponse`

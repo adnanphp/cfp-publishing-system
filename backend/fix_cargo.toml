@@ -1,0 +1,34 @@
+[dependencies]
+# Core
+actix-web = "4.12"
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+async-trait = "0.1"
+thiserror = "1.0"
+
+# Database
+sqlx = { version = "0.7", features = ["postgres", "runtime-tokio-rustls", "macros"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Security
+bcrypt = "0.18"
+jsonwebtoken = "9.3"
+argon2 = "0.5"
+
+# Utils
+chrono = { version = "0.4", features = ["serde"] }
+rand = "0.8"
+log = "0.4"
+tracing = "0.1"
+
+# External APIs
+reqwest = { version = "0.13", features = ["json"] }
+lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "tokio1-native-tls"] }
+handlebars = "4.5"
+
+# Cache
+redis = { version = "0.24", features = ["tokio-comp"] }
+
+[dev-dependencies]
+dotenvy = "0.15"

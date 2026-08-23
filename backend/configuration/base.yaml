@@ -1,0 +1,65 @@
+# backend/configuration/base.yaml
+application:
+  host: "127.0.0.1"
+  port: 3000
+  base_url: "http://localhost:3000"
+  frontend_url: "http://localhost:5173"
+  hmac_secret: "change-this-in-production-to-a-strong-random-string"
+  session_cookie_name: "cfp_session"
+  session_duration_hours: 24
+  enable_swagger: true
+  log_level: "info"
+  workers: 4
+
+database:
+  host: "localhost"
+  port: 5432
+  username: "adnan"
+  password: ""
+  database_name: "cfp_db"
+  require_ssl: false
+  max_connections: 10
+  min_connections: 2
+  connect_timeout_seconds: 10
+  idle_timeout_seconds: 300
+  max_lifetime_seconds: 1800
+
+redis:
+  host: "localhost"
+  port: 6380
+  password: "cfp_redis_123"
+  database: 0
+  max_connections: 20
+  connection_timeout_seconds: 5
+  idle_timeout_seconds: 300
+  key_prefix: "cfp:"
+  session_ttl_seconds: 86400  # 24 hours
+  cache_ttl_seconds: 3600    # 1 hour
+  lock_ttl_seconds: 30       # 30 seconds
+
+jwt:
+  access_token_secret: "change-this-to-a-strong-random-string-at-least-32-chars"
+  refresh_token_secret: "change-this-to-another-strong-random-string-at-least-32-chars"
+  access_token_expiration_minutes: 15    # Short-lived access tokens
+  refresh_token_expiration_days: 30      # Long-lived refresh tokens
+  issuer: "cfp-backend"
+  audience: "cfp-frontend"
+  leeway_seconds: 60
+
+email:
+  host: "smtp.gmail.com"
+  port: 587
+  username: "your-email@gmail.com"
+  password: "your-app-password"
+  from_address: "noreply@cfp.example.com"
+  from_name: "CFP Publishing System"
+  enable_tls: true
+
+security:
+  cors_origins:
+    - "http://localhost:5173"
+    - "http://127.0.0.1:5173"
+  rate_limit_requests: 100
+  rate_limit_duration_seconds: 60
+  password_min_length: 8
+  password_max_length: 128
