@@ -2,6 +2,38 @@
 -- Add all columns that the Rust code expects
 -- ============================================
 
+-- ============================================
+-- ADD ALL MISSING COLUMNS FOR RUST CODE
+-- ============================================
+
+-- Add h_index to authors
+ALTER TABLE authors ADD COLUMN IF NOT EXISTS h_index INTEGER DEFAULT 0;
+
+-- Add summary columns to texts
+ALTER TABLE texts 
+ADD COLUMN IF NOT EXISTS download_count INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS total_donations DECIMAL(10,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS unique_downloaders INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS avg_rating DECIMAL(3,2) DEFAULT 0;
+
+-- Add summary columns to downloads
+ALTER TABLE downloads 
+ADD COLUMN IF NOT EXISTS download_count INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS unique_members INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS unique_texts INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS total_downloads INTEGER DEFAULT 0;
+
+-- Add last_7_days column (for reporting)
+ALTER TABLE downloads 
+ADD COLUMN IF NOT EXISTS last_7_days INTEGER DEFAULT 0;
+
+-- Initialize data
+UPDATE authors SET h_index = 0 WHERE h_index IS NULL;
+UPDATE texts SET download_count = 0 WHERE download_count IS NULL;
+UPDATE downloads SET download_count = 0 WHERE download_count IS NULL;
+
+
+
 -- Downloads table - add summary columns
 ALTER TABLE downloads 
 ADD COLUMN IF NOT EXISTS download_count INTEGER DEFAULT 0,
