@@ -1,104 +1,255 @@
+# CFP Publishing System
 
-#  CFP Publishing System
+> A full-stack publishing platform for charitable foundations, combining a Rust backend, SvelteKit dashboard, PostgreSQL database, Redis caching, WebSocket notifications, and an ML-powered text analysis service.
 
-A complete publishing platform for charitable foundations with backend API, frontend dashboard, and ML-powered services.
+[![Rust](https://img.shields.io/badge/Rust-1.70%2B-orange?logo=rust)](https://www.rust-lang.org/)
+[![SvelteKit](https://img.shields.io/badge/SvelteKit-Frontend-orange?logo=svelte)](https://kit.svelte.dev/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-ML%20Service-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?logo=postgresql)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-Cache-DC382D?logo=redis)](https://redis.io/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## ✨ Features
+---
 
-- **Backend API** - Rust/Actix-web RESTful API with PostgreSQL
-- **Frontend Dashboard** - SvelteKit admin interface
-- **ML Service** - FastAPI microservice for text analysis
-- **Docker Support** - Easy deployment with Redis caching
-- **Real-time Updates** - WebSocket notifications
+## 🚀 Overview
 
-## 🏗 Architecture
+**CFP Publishing System** is an end-to-end publishing platform designed for charitable foundations and content-driven organizations.
 
+The system separates core application logic, user interface, and machine-learning functionality into independent services:
+
+* **Rust + Actix-web** — high-performance backend API
+* **SvelteKit** — responsive administrative dashboard
+* **FastAPI + Python** — ML-powered text analysis service
+* **PostgreSQL** — persistent relational data storage
+* **Redis** — caching and fast-access data
+* **WebSockets** — real-time notifications
+* **Docker Compose** — local development and service orchestration
+
+The architecture is designed to demonstrate modern **full-stack, backend, API, ML-service, and containerized application development**.
+
+---
+
+## ✨ Key Features
+
+### Backend API
+
+* RESTful API built with Rust and Actix-web
+* PostgreSQL integration
+* Member, author, text, and download resources
+* Health and system-status endpoints
+* API documentation
+
+### Frontend Dashboard
+
+* SvelteKit-based administration interface
+* Vite development environment
+* Integration with backend REST APIs
+* Real-time system updates
+
+### ML Service
+
+* Python-based FastAPI microservice
+* Text analysis functionality
+* Independent deployment from the main backend
+* Interactive API documentation
+
+### Infrastructure
+
+* PostgreSQL database
+* Redis caching
+* Docker Compose orchestration
+* Centralized service management through `cfp.sh`
+
+### Real-Time Communication
+
+* WebSocket-based notifications
+* Event-driven communication between services and clients
+
+---
+
+## 🏗️ System Architecture
+
+```text
+                         ┌──────────────────────┐
+                         │   SvelteKit Frontend │
+                         │      Port 5173       │
+                         └──────────┬───────────┘
+                                    │
+                              REST / WebSocket
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │   Rust / Actix-web   │
+                         │      Port 3000       │
+                         └───────┬────────┬─────┘
+                                 │        │
+                       ┌─────────┘        └──────────┐
+                       ▼                             ▼
+              ┌─────────────────┐          ┌─────────────────┐
+              │   PostgreSQL     │          │      Redis      │
+              │     Database     │          │     Cache       │
+              │     Port 5432    │          │     Port 6379   │
+              └─────────────────┘          └─────────────────┘
+
+                                    │
+                              HTTP / REST
+                                    ▼
+                         ┌──────────────────────┐
+                         │   FastAPI ML Service │
+                         │      Port 8000       │
+                         └──────────────────────┘
 ```
-CFP System
-├── backend/        # Rust API (port 3000)
-├── frontend/       # SvelteKit UI (port 5173)
-├── ml-service/     # Python ML API (port 8000)
-└── docker-compose  # PostgreSQL + Redis
+
+### Service Layout
+
+```text
+CFP Publishing System
+├── backend/        → Rust + Actix-web API
+├── frontend/       → SvelteKit dashboard
+├── ml-service/     → Python + FastAPI ML service
+├── PostgreSQL      → Persistent storage
+├── Redis           → Caching
+└── Docker Compose  → Infrastructure orchestration
 ```
 
-##  Quick Start
+---
+
+## ⚡ Quick Start
 
 ### Prerequisites
-- Rust 1.70+
-- Node.js 18+ / pnpm
-- Python 3.10+
-- Docker & Docker Compose
-- PostgreSQL 14+ (or use Docker)
 
-### 1. Clone & Setup
+Install:
+
+* Rust 1.70+
+* Node.js 18+
+* pnpm
+* Python 3.10+
+* Docker
+* Docker Compose
+* PostgreSQL 14+ *(optional when using Docker)*
+
+### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/adnanphp/cfp-publishing-system.git
 cd cfp-publishing-system
 ```
 
-### 2. Start All Services
+### 2. Start the Complete System
 
-**One-command startup:**
+The recommended approach is to use the included management script:
+
 ```bash
 chmod +x cfp.sh
 ./cfp.sh start
 ```
 
-**Or manually:**
+### Manual Startup
+
+#### Start Infrastructure
+
 ```bash
-# Start Docker (PostgreSQL + Redis)
 docker-compose up -d
+```
 
-# Build & start backend
-cd backend && cargo build --release && cd ..
+This starts:
+
+* PostgreSQL
+* Redis
+
+#### Start Backend
+
+```bash
+cd backend
+cargo build --release
+cd ..
+
 ./backend/target/release/cfp-backend > backend.log 2>&1 &
+```
 
-# Start frontend
-cd frontend && pnpm install && pnpm run dev > ../frontend.log 2>&1 &
+#### Start Frontend
 
-# Start ML service
+```bash
+cd frontend
+pnpm install
+pnpm run dev > ../frontend.log 2>&1 &
+```
+
+#### Start ML Service
+
+```bash
 cd ml-service
+
 python3 -m venv venv
 source venv/bin/activate
+
 pip install -r requirements.txt
-uvicorn src.main:app --host 0.0.0.0 --port 8000 > ../ml-service.log 2>&1 &
+
+uvicorn src.main:app \
+  --host 0.0.0.0 \
+  --port 8000 > ../ml-service.log 2>&1 &
 ```
 
-### 3. Access the System
+---
 
-| Service | URL |
-|---------|-----|
-|  Frontend Dashboard | http://localhost:5173 |
-|  Backend API | http://localhost:3000 |
-|  API Docs | http://localhost:3000/api/docs |
-|  ML Service | http://localhost:8000 |
-|  ML Docs | http://localhost:8000/docs |
+## 🌐 Service URLs
 
-### 4. Management Commands
+| Service            | URL                              |
+| ------------------ | -------------------------------- |
+| Frontend Dashboard | `http://localhost:5173`          |
+| Backend API        | `http://localhost:3000`          |
+| Backend API Docs   | `http://localhost:3000/api/docs` |
+| ML Service         | `http://localhost:8000`          |
+| ML API Docs        | `http://localhost:8000/docs`     |
+
+---
+
+## 🛠️ Management Commands
+
+The `cfp.sh` script provides a simple interface for managing the complete application:
 
 ```bash
-./cfp.sh start          # Start all services
-./cfp.sh stop           # Stop all services
-./cfp.sh status         # Check service status
-./cfp.sh restart        # Restart all services
-./cfp.sh logs [service] # View logs (backend|frontend|ml)
-./cfp.sh test           # Test all endpoints
+./cfp.sh start
+./cfp.sh stop
+./cfp.sh status
+./cfp.sh restart
+./cfp.sh logs [service]
+./cfp.sh test
 ```
 
-## 📡 API Endpoints
+Examples:
+
+```bash
+./cfp.sh logs backend
+./cfp.sh logs frontend
+./cfp.sh logs ml
+```
+
+---
+
+## 📡 API
 
 ### Health & Status
-- `GET /health` - System health check
-- `GET /status` - System status
+
+```http
+GET /health
+GET /status
+```
 
 ### Core Resources
-- `GET /api/members` - List members
-- `GET /api/texts` - List texts
-- `GET /api/authors` - List authors
-- `GET /api/downloads` - Download statistics
-- `GET /api/downloads/stats` - Download analytics
 
-### Example Response
+```http
+GET /api/members
+GET /api/texts
+GET /api/authors
+GET /api/downloads
+GET /api/downloads/stats
+```
+
+### Example Health Response
+
 ```json
 {
   "service": "cfp-backend",
@@ -107,46 +258,80 @@ uvicorn src.main:app --host 0.0.0.0 --port 8000 > ../ml-service.log 2>&1 &
 }
 ```
 
+---
+
 ## 🔧 Development
 
-### Backend Development
+### Backend
+
 ```bash
 cd backend
+
 cargo run
-# Watches for changes with cargo-watch
+```
+
+For automatic reloads:
+
+```bash
 cargo install cargo-watch
 cargo watch -x run
 ```
 
-### Frontend Development
+### Frontend
+
 ```bash
 cd frontend
+
 pnpm install
 pnpm run dev
-# Visit http://localhost:5173
 ```
 
-### ML Service Development
+Open:
+
+```text
+http://localhost:5173
+```
+
+### ML Service
+
 ```bash
 cd ml-service
+
 source venv/bin/activate
+
 uvicorn src.main:app --reload
 ```
 
-## 🐳 Docker Deployment
+Open the interactive API documentation:
+
+```text
+http://localhost:8000/docs
+```
+
+---
+
+## 🐳 Docker
+
+Start infrastructure:
 
 ```bash
-# Build and start all services
 docker-compose up -d
+```
 
-# View logs
+View logs:
+
+```bash
 docker-compose logs -f
+```
 
-# Stop services
+Stop services:
+
+```bash
 docker-compose down
 ```
 
-### Docker Compose Configuration
+### Docker Compose Services
+
 ```yaml
 services:
   postgres:
@@ -164,77 +349,202 @@ services:
       - "6379:6379"
 ```
 
+> For production deployments, credentials should be supplied through secrets or environment-specific configuration rather than committed configuration files.
+
+---
+
 ## 🧪 Testing
 
+Run the complete endpoint test suite:
+
 ```bash
-# Test all backend endpoints
 ./cfp.sh test
+```
 
-# Run Rust tests
-cd backend && cargo test
+Run Rust tests:
 
-# Test ML service
+```bash
+cd backend
+cargo test
+```
+
+Check the ML service:
+
+```bash
 curl http://localhost:8000/health
 ```
 
-## 📊 Project Structure
+---
 
-```
+## 📁 Project Structure
+
+```text
 cfp-publishing-system/
+│
 ├── backend/
 │   ├── src/
-│   │   ├── api/          # HTTP handlers & routes
-│   │   ├── domain/       # Business logic
-│   │   └── main.rs       # Entry point
+│   │   ├── api/
+│   │   │   └── # HTTP handlers & routes
+│   │   ├── domain/
+│   │   │   └── # Business logic
+│   │   └── main.rs
 │   └── Cargo.toml
+│
 ├── frontend/
 │   ├── src/
-│   │   └── routes/       # SvelteKit pages
+│   │   └── routes/
+│   │       └── # SvelteKit pages
 │   └── package.json
+│
 ├── ml-service/
 │   ├── src/
-│   │   └── main.py       # FastAPI app
+│   │   └── main.py
 │   └── requirements.txt
+│
 ├── docker-compose.yml
-├── cfp.sh                # Management script
+├── cfp.sh
 └── README.md
 ```
 
-## 🛠️ Technology Stack
+---
 
-| Component | Technology |
-|-----------|------------|
-| Backend | Rust + Actix-web |
-| Frontend | SvelteKit + Vite |
-| ML Service | Python + FastAPI |
-| Database | PostgreSQL |
-| Cache | Redis |
-| Container | Docker + Compose |
+## 🧰 Technology Stack
 
-## 📝 Environment Variables
+| Layer             | Technology             |
+| ----------------- | ---------------------- |
+| Backend           | Rust, Actix-web        |
+| Frontend          | SvelteKit, Vite        |
+| ML Service        | Python, FastAPI        |
+| Database          | PostgreSQL             |
+| Cache             | Redis                  |
+| Communication     | REST, WebSockets       |
+| Containers        | Docker, Docker Compose |
+| API Documentation | OpenAPI / Swagger      |
 
-Create `.env` file:
+---
+
+## 🔐 Environment Configuration
+
+Create a `.env` file for local development:
+
 ```env
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/cfp_db
 REDIS_URL=redis://localhost:6379
 JWT_SECRET=your-secret-key
 ```
 
+**Do not commit `.env` files or production credentials to Git.**
+
+Recommended `.gitignore` entries:
+
+```gitignore
+.env
+.env.*
+!.env.example
+```
+
+For collaborators, provide a safe template:
+
+```env
+DATABASE_URL=
+REDIS_URL=
+JWT_SECRET=
+```
+
+---
+
+## 🔄 Application Workflow
+
+```text
+User
+  │
+  ▼
+SvelteKit Dashboard
+  │
+  ├────────────── REST API ──────────────┐
+  │                                      ▼
+  │                              Rust / Actix-web
+  │                                      │
+  │                         ┌────────────┴────────────┐
+  │                         ▼                         ▼
+  │                    PostgreSQL                   Redis
+  │
+  └──────────── WebSocket Notifications
+
+Rust Backend
+      │
+      └──────────── HTTP ────────────► FastAPI ML Service
+                                            │
+                                            ▼
+                                      Text Analysis
+```
+
+---
+
+## 🎯 Engineering Highlights
+
+This project demonstrates experience with:
+
+* **Full-stack application architecture**
+* **Rust backend development**
+* **REST API design**
+* **Python ML microservices**
+* **PostgreSQL data modeling**
+* **Redis caching**
+* **WebSocket communication**
+* **SvelteKit frontend development**
+* **Docker-based infrastructure**
+* **Service-oriented architecture**
+* **API documentation with OpenAPI**
+* **Automated development and testing workflows**
+
+---
+
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open Pull Request
+Contributions are welcome.
+
+1. Fork the repository.
+2. Create a feature branch:
+
+```bash
+git checkout -b feature/amazing-feature
+```
+
+3. Commit your changes:
+
+```bash
+git commit -m "Add amazing feature"
+```
+
+4. Push the branch:
+
+```bash
+git push origin feature/amazing-feature
+```
+
+5. Open a Pull Request.
+
+---
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file
+This project is licensed under the **MIT License**.
 
-##  Acknowledgments
-
-- Built with ❤️ using Rust, SvelteKit, and FastAPI
-- Thanks to all contributors and open-source libraries
+See the [LICENSE](LICENSE) file for details.
 
 ---
+
+## 🙏 Acknowledgments
+
+Built with open-source technologies including Rust, Actix-web, SvelteKit, FastAPI, PostgreSQL, Redis, and Docker.
+
+---
+
+<div align="center">
+
+**CFP Publishing System**
+
+Full-Stack • Backend • ML • APIs • Cloud-Native Development
+
+</div>
